@@ -1,0 +1,5 @@
+[paths]
+source = detex.py
+
+[report]
+include = detex.py
