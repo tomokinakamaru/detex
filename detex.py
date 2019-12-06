@@ -1,60 +1,74 @@
 import re
+from argparse import ArgumentParser
+from types import MethodType
 from TexSoup import TexSoup
-from TexSoup.data import Arg, TexCmd, TexEnv, TexNode
+from TexSoup.data import Arg, TexExpr, TexNode
 from TexSoup.utils import TokenWithPosition
 
 
 class Detex(object):
-
-    _WALK_CONTENTS = object()
-
     def __init__(self):
-        self._actions = {'[tex]': self._WALK_CONTENTS}
+        self._actions = {'[tex]': self._root_action}
+
+    def cli(self):
+        parser = ArgumentParser('detex')
+        parser.add_argument('files', metavar='file', nargs='+')
+        args = parser.parse_args()
+        print(self.files(*args.files))
 
     def files(self, *paths):
         return '\n\n'.join(self.file(p) for p in paths)
 
-    def strings(self, *strings):
-        return '\n\n'.join(self.string(s) for s in strings)
-
     def file(self, path):
         with open(path) as f:
-            return self.string(f.read())
+            return self.str(f.read())
 
-    def string(self, string):
-        walker, blocks = Walker(TexSoup(string)), []
-        while walker:
-            node = walker.next()
-            if isinstance(node, (TexNode, TexCmd, TexEnv)):
-                if node.name in self._actions:
-                    action = self._actions[node.name]
-                    if action is self._WALK_CONTENTS:
-                        walker.traverse_current_contents()
-                    else:
-                        blocks.append(str(action(node)))
+    def str(self, src):
+        node = TexSoup(src)
+        for n in self._walk(node):
+            n._eval = self._create_eval(n)
+        return node.expr._eval()
 
-            elif isinstance(node, TokenWithPosition):
-                if not node.text.startswith('%'):
-                    blocks.append(node.text)
-
-            elif isinstance(node, Arg):
-                walker.traverse_current_contents()
-
-        return self.post_process(''.join(blocks))
-
-    def walk_contents(self, *names):
-        for name in names:
-            self._actions[name] = self._WALK_CONTENTS
-
-    def replace(self, *names):
+    def __call__(self, *names):
         def _(f):
-            for name in names:
-                self._actions[name] = f
+            if names:
+                for name in names:
+                    self._actions[name] = f
+            else:
+                self._actions[f.__name__] = f
             return f
         return _
 
+    def _create_eval(self, node):
+        if isinstance(node, TexExpr):
+            def _(n):
+                g = (self._peel(c)._eval() for c in n.contents)
+                a = self._actions.get(n.name, lambda x: None)
+                return a(''.join(t for t in g if t))
+            return MethodType(_, node)
+        elif isinstance(node, Arg):
+            def _(n):
+                g = (self._peel(c)._eval() for c in n.contents)
+                return ''.join(t for t in g if t)
+            return MethodType(_, node)
+        elif isinstance(node, TokenWithPosition):
+            def _(n):
+                return None if n.text.startswith('%') else n.text
+            return MethodType(_, node)
+
+    def _walk(self, node):
+        stack = [node]
+        while stack:
+            n = self._peel(stack.pop())
+            yield n
+            if isinstance(n, (TexExpr, Arg)):
+                stack.extend(reversed(list(n.contents)))
+
+    def _peel(self, node):
+        return node.expr if isinstance(node, TexNode) else node
+
     @staticmethod
-    def post_process(text):
+    def _root_action(text):
         text = text.replace('~', ' ')
         text = text.replace(r'\\', '\n')
         text = text.replace('\\', '')
@@ -62,19 +76,3 @@ class Detex(object):
         text = re.sub('([^\n])\n([^\n])', r'\1 \2', text)
         text = re.sub(r' +', r' ', text)
         return text.strip()
-
-
-class Walker(object):
-    def __init__(self, node):
-        self._stack = [node]
-        self._current = None
-
-    def __bool__(self):
-        return bool(self._stack)
-
-    def next(self):
-        self._current = self._stack.pop()
-        return self._current
-
-    def traverse_current_contents(self):
-        self._stack.extend(reversed(list(self._current.contents)))
