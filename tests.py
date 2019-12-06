@@ -3,7 +3,7 @@ from detex import Detex
 detex = Detex()
 
 
-@detex()
+@detex
 def document(text):
     return text
 
