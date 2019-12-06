@@ -2,25 +2,24 @@ from detex import Detex
 
 detex = Detex()
 
-detex.walk_contents(
-    'document',
-    'abstract',
-    'enumsentence'
-)
+
+@detex()
+def document(text):
+    return text
 
 
-@detex.replace('section*', 'subsection*')
-def head(node):
-    return f'\n1. {node.args[0].value}\n'
+@detex('abstract', 'enumsentence', 'emph', 'ex')
+def identity(text):
+    return text
 
 
-@detex.replace('emph', 'ex')
-def text(node):
-    return f'{node.args[0].value}'
+@detex('section*', 'subsection*')
+def head(text):
+    return f'\n1. {text}\n'
 
 
 def test_string():
-    assert detex.strings(r'''
+    assert detex.str(r'''
     \begin{document}
         \begin{abstract}
             test
