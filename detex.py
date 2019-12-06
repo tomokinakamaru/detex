@@ -8,7 +8,7 @@ from TexSoup.utils import TokenWithPosition
 
 class Detex(object):
     def __init__(self):
-        self._actions = {'[tex]': self._root_action}
+        self._actions = {'[tex]': self._default_root_action}
 
     def cli(self):
         parser = ArgumentParser('detex')
@@ -29,15 +29,17 @@ class Detex(object):
             n._eval = self._create_eval(n)
         return node.expr._eval()
 
-    def __call__(self, *names):
-        def _(f):
-            if names:
-                for name in names:
-                    self._actions[name] = f
-            else:
-                self._actions[f.__name__] = f
+    def __call__(self, *args):
+        if len(args) == 1 and callable(args[0]):
+            f = args[0]
+            self._actions[f.__name__] = f
             return f
-        return _
+        else:
+            def _(f):
+                for name in args:
+                    self._actions[name] = f
+                return f
+            return _
 
     def _create_eval(self, node):
         if isinstance(node, TexExpr):
@@ -46,11 +48,13 @@ class Detex(object):
                 a = self._actions.get(n.name, lambda x: None)
                 return a(''.join(t for t in g if t))
             return MethodType(_, node)
+
         elif isinstance(node, Arg):
             def _(n):
                 g = (self._peel(c)._eval() for c in n.contents)
                 return ''.join(t for t in g if t)
             return MethodType(_, node)
+
         elif isinstance(node, TokenWithPosition):
             def _(n):
                 return None if n.text.startswith('%') else n.text
@@ -68,7 +72,7 @@ class Detex(object):
         return node.expr if isinstance(node, TexNode) else node
 
     @staticmethod
-    def _root_action(text):
+    def _default_root_action(text):
         text = text.replace('~', ' ')
         text = text.replace(r'\\', '\n')
         text = text.replace('\\', '')
