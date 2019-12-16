@@ -1,4 +1,5 @@
 from detex import Detex
+from io import StringIO
 
 detex = Detex()
 
@@ -29,5 +30,7 @@ def test_string():
 
 
 def test_file():
+    out = StringIO()
+    detex.cli(['sample.tex'], out)
     with open('sample.txt') as txt:
-        assert txt.read().strip() == detex.files('sample.tex')
+        assert txt.read() == out.getvalue()
