@@ -1,4 +1,5 @@
 import re
+import sys
 from argparse import ArgumentParser
 from types import MethodType
 from TexSoup import TexSoup
@@ -10,11 +11,11 @@ class Detex(object):
     def __init__(self):
         self._actions = {'[tex]': self._default_root_action}
 
-    def cli(self):
+    def cli(self, args=None, out=sys.stdout):
         parser = ArgumentParser('detex')
         parser.add_argument('files', metavar='file', nargs='+')
-        args = parser.parse_args()
-        print(self.files(*args.files))
+        parsed = parser.parse_args(args)
+        print(self.files(*parsed.files), file=out)
 
     def files(self, *paths):
         return '\n\n'.join(self.file(p) for p in paths)
