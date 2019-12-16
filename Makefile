@@ -1,5 +1,8 @@
+.PHONY: default
+default: setup
+
 .PHONY: all
-all: setup
+all: clean setup test
 
 .PHONY: setup
 setup: venv/bin/flake8 venv/bin/mypy
