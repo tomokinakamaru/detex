@@ -1,6 +1,6 @@
 {
     "[python]": {
-        "editor.rulers": [80]
+        "editor.rulers": [79]
     },
     "python.pythonPath": "venv/bin/python"
 }
