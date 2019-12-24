@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from argparse import ArgumentParser
@@ -9,26 +10,7 @@ from TexSoup.utils import TokenWithPosition
 
 class Detex(object):
     def __init__(self):
-        self._actions = {'[tex]': self._default_root_action}
-
-    def cli(self, args=None, out=sys.stdout):
-        parser = ArgumentParser('detex')
-        parser.add_argument('files', metavar='file', nargs='+')
-        parsed = parser.parse_args(args)
-        print(self.files(*parsed.files), file=out)
-
-    def files(self, *paths):
-        return '\n\n'.join(self.file(p) for p in paths)
-
-    def file(self, path):
-        with open(path) as f:
-            return self.str(f.read())
-
-    def str(self, src):
-        node = TexSoup(src)
-        for n in self._walk(node):
-            n._eval = self._create_eval(n)
-        return node.expr._eval()
+        self._actions = {'[tex]': _default_root_action}
 
     def __call__(self, *args):
         if len(args) == 1 and callable(args[0]):
@@ -41,6 +23,27 @@ class Detex(object):
                     self._actions[name] = f
                 return f
             return _
+
+    def _read_rcfiles(self, *paths):
+        for path in paths:
+            self._read_rcfile(path)
+
+    def _read_rcfile(self, path):
+        with open(path) as f:
+            exec(f.read())
+
+    def _detex_files(self, *paths):
+        return '\n\n'.join(self._detex_file(p) for p in paths)
+
+    def _detex_file(self, path):
+        with open(path) as f:
+            return self._detex_str(f.read())
+
+    def _detex_str(self, src):
+        node = TexSoup(src)
+        for n in self._walk(node):
+            n._eval = self._create_eval(n)
+        return node.expr._eval()
 
     def _create_eval(self, node):
         if isinstance(node, TexExpr):
@@ -72,12 +75,47 @@ class Detex(object):
     def _peel(self, node):
         return node.expr if isinstance(node, TexNode) else node
 
-    @staticmethod
-    def _default_root_action(text):
-        text = text.replace('~', ' ')
-        text = text.replace(r'\\', '\n')
-        text = text.replace('\\', '')
-        text = re.sub('\n\n+', '\n\n', text)
-        text = re.sub('([^\n])\n([^\n])', r'\1 \2', text)
-        text = re.sub(r' +', r' ', text)
-        return text.strip()
+
+def _default_root_action(text):
+    text = text.replace('~', ' ')
+    text = text.replace(r'\\', '\n')
+    text = text.replace('\\', '')
+    text = re.sub('\n\n+', '\n\n', text)
+    text = re.sub('([^\n])\n([^\n])', r'\1 \2', text)
+    text = re.sub(r' +', r' ', text)
+    return text.strip()
+
+
+def cli(args=None, out=sys.stdout):
+    parser = ArgumentParser('detex')
+
+    parser.add_argument(
+        '-r', '--rcfile',
+        metavar='rcfile',
+        dest='rcfiles',
+        action='append',
+        help='read custom rcfile'
+    )
+
+    parser.add_argument(
+        'files',
+        metavar='file',
+        nargs='+',
+        help='path to tex file'
+    )
+
+    parsed = parser.parse_args(args)
+
+    if parsed.rcfiles:
+        detex._read_rcfiles(*parsed.rcfiles)
+    else:
+        for rcfile in default_rcfiles:
+            if os.path.exists(rcfile):
+                detex._read_rcfile(rcfile)
+
+    print(detex._detex_files(*parsed.files), file=out)
+
+
+detex = Detex()
+
+default_rcfiles = ['detexrc']
