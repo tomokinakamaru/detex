@@ -17,6 +17,10 @@ clean:
 	rm -rf venv .coverage .tox htmlcov *.egg-info
 	find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 
+.PHONY: build-docker-image
+build-docker-image:
+	docker build -t detex:latest .
+
 venv:
 	python3 -m venv venv --without-pip
 
