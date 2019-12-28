@@ -119,3 +119,7 @@ def cli(args=None, out=sys.stdout):
 detex = Detex()
 
 default_rcfiles = ['detexrc']
+
+
+if __name__ == '__main__':
+    cli()
