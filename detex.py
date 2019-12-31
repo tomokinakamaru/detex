@@ -11,6 +11,7 @@ from TexSoup.utils import TokenWithPosition
 class Detex(object):
     def __init__(self):
         self._actions = {'[tex]': _default_root_action}
+        self._verbose = False
 
     def __call__(self, *args):
         if len(args) == 1 and callable(args[0]):
@@ -24,13 +25,16 @@ class Detex(object):
                 return f
             return _
 
+    def verbose(self):
+        self._verbose = True
+
     def _read_rcfiles(self, *paths):
         for path in paths:
             self._read_rcfile(path)
 
     def _read_rcfile(self, path):
         with open(path) as f:
-            exec(f.read())
+            exec(f.read(), globals(), locals())
 
     def _detex_files(self, *paths):
         return '\n\n'.join(self._detex_file(p) for p in paths)
@@ -98,6 +102,12 @@ def cli(args=None, out=sys.stdout):
     )
 
     parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='verbose output'
+    )
+
+    parser.add_argument(
         'files',
         metavar='file',
         nargs='+',
@@ -105,6 +115,9 @@ def cli(args=None, out=sys.stdout):
     )
 
     parsed = parser.parse_args(args)
+
+    if parsed.verbose:
+        detex.verbose()
 
     if parsed.rcfiles:
         detex._read_rcfiles(*parsed.rcfiles)
