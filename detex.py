@@ -10,7 +10,7 @@ from TexSoup.utils import TokenWithPosition
 
 class Detex(object):
     def __init__(self):
-        self._actions = {'[tex]': _default_root_action}
+        self._actions = {"[tex]": _default_root_action}
         self._verbose = False
 
     def __call__(self, *args):
@@ -19,10 +19,12 @@ class Detex(object):
             self._actions[f.__name__] = f
             return f
         else:
+
             def _(f):
                 for name in args:
                     self._actions[name] = f
                 return f
+
             return _
 
     def verbose(self):
@@ -37,7 +39,7 @@ class Detex(object):
             exec(f.read(), globals(), locals())
 
     def _detex_files(self, *paths):
-        return '\n\n'.join(self._detex_file(p) for p in paths)
+        return "\n\n".join(self._detex_file(p) for p in paths)
 
     def _detex_file(self, path):
         with open(path) as f:
@@ -51,21 +53,27 @@ class Detex(object):
 
     def _create_eval(self, node):
         if isinstance(node, TexExpr):
+
             def _(n):
                 g = (self._peel(c)._eval() for c in n.contents)
                 a = self._actions.get(n.name, lambda x: None)
-                return a(''.join(t for t in g if t))
+                return a("".join(t for t in g if t))
+
             return MethodType(_, node)
 
         elif isinstance(node, Arg):
+
             def _(n):
                 g = (self._peel(c)._eval() for c in n.contents)
-                return ''.join(t for t in g if t)
+                return "".join(t for t in g if t)
+
             return MethodType(_, node)
 
         elif isinstance(node, TokenWithPosition):
+
             def _(n):
-                return None if n.text.startswith('%') else n.text
+                return None if n.text.startswith("%") else n.text
+
             return MethodType(_, node)
 
     def _walk(self, node):
@@ -81,38 +89,30 @@ class Detex(object):
 
 
 def _default_root_action(text):
-    text = text.replace('~', ' ')
-    text = text.replace(r'\\', '\n')
-    text = text.replace('\\', '')
-    text = re.sub('\n\n+', '\n\n', text)
-    text = re.sub('([^\n])\n([^\n])', r'\1 \2', text)
-    text = re.sub(r' +', r' ', text)
+    text = text.replace("~", " ")
+    text = text.replace(r"\\", "\n")
+    text = text.replace("\\", "")
+    text = re.sub("\n\n+", "\n\n", text)
+    text = re.sub("([^\n])\n([^\n])", r"\1 \2", text)
+    text = re.sub(r" +", r" ", text)
     return text.strip()
 
 
 def cli(args=None, out=sys.stdout):
-    parser = ArgumentParser('detex')
+    parser = ArgumentParser("detex")
 
     parser.add_argument(
-        '-r', '--rcfile',
-        metavar='rcfile',
-        dest='rcfiles',
-        action='append',
-        help='read custom rcfile'
+        "-r",
+        "--rcfile",
+        metavar="rcfile",
+        dest="rcfiles",
+        action="append",
+        help="read custom rcfile",
     )
 
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='verbose output'
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
 
-    parser.add_argument(
-        'files',
-        metavar='file',
-        nargs='+',
-        help='path to tex file'
-    )
+    parser.add_argument("files", metavar="file", nargs="+", help="path to tex file")
 
     parsed = parser.parse_args(args)
 
@@ -131,8 +131,8 @@ def cli(args=None, out=sys.stdout):
 
 detex = Detex()
 
-default_rcfiles = ['detexrc']
+default_rcfiles = ["detexrc"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()  # pragma: no cover

@@ -1,17 +1,17 @@
 from setuptools import setup
 
-with open('README.md') as f:
+with open("README.md") as f:
     long_description = f.read()
 
 setup(
-    author='Tomoki Nakamaru',
-    author_email='nakamaru@csg.ci.i.u-tokyo.ac.jp',
-    entry_points={'console_scripts': ['detex=detex:cli']},
-    install_requires=['TexSoup==0.2.0'],
-    license='MIT',
+    author="Tomoki Nakamaru",
+    author_email="nakamaru@csg.ci.i.u-tokyo.ac.jp",
+    entry_points={"console_scripts": ["detex=detex:cli"]},
+    install_requires=["TexSoup==0.2.0"],
+    license="MIT",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    name='detex',
-    py_modules=['detex'],
-    version='0.0.0'
+    long_description_content_type="text/markdown",
+    name="detex",
+    py_modules=["detex"],
+    version="0.0.0",
 )
