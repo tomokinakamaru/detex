@@ -17,6 +17,5 @@ jobs:
       - run:
           command: make test
 
-      - store_artifacts:
-          path: htmlcov
-          destination: htmlcov
+      - run:
+          command: pip install codecov && codecov
