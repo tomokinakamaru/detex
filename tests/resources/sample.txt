@@ -1,0 +1,9 @@
+1. Introduction
+
+This paper introduces FOO. It also introduces BAR.
+
+Itemization:
+
+- Item "A"
+
+- Item —

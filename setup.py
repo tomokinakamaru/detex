@@ -1,17 +1,19 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
-with open("README.md") as f:
-    long_description = f.read()
+pkgs = find_packages("src")
+
+name = pkgs[0]
 
 setup(
-    author="Tomoki Nakamaru",
-    author_email="nakamaru@csg.ci.i.u-tokyo.ac.jp",
-    entry_points={"console_scripts": ["detex=detex:cli"]},
-    install_requires=["TexSoup==0.2.0"],
-    license="MIT",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    name="detex",
-    py_modules=["detex"],
-    version="0.0.0",
+    entry_points={
+        "console_scripts": [
+            f"{name}={name}.__main__:cli",
+        ],
+    },
+    install_requires=[
+        "TexSoup==0.3.1",
+    ],
+    name=name,
+    packages=pkgs,
+    package_dir={"": "src"},
 )

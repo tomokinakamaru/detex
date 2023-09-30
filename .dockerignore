@@ -1,5 +1,6 @@
-/__pycache__
-/.tox
-/htmlcov
-/venv
-/*.egg-info
+__pycache__
+*.egg-info
+*.pyc
+*.pyo
+/.git
+/.venv
