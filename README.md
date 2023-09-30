@@ -1,1 +1,3 @@
 # Detex
+
+Tex → Text
