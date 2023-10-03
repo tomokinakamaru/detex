@@ -19,4 +19,4 @@ RUN pip install --no-cache /dist/*.whl && \
 
 WORKDIR /workdir
 
-ENTRYPOINT [ "bibtefmt" ]
+ENTRYPOINT [ "detex" ]
